@@ -1,5 +1,7 @@
 package com.udacity.jdnd.course3.critter.user.controller;
 
+import com.udacity.jdnd.course3.critter.pet.model.Pet;
+import com.udacity.jdnd.course3.critter.pet.service.PetService;
 import com.udacity.jdnd.course3.critter.user.EmployeeDTO;
 import com.udacity.jdnd.course3.critter.user.EmployeeRequestDTO;
 import com.udacity.jdnd.course3.critter.user.model.Customer;
@@ -13,6 +15,7 @@ import java.time.DayOfWeek;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import static org.springframework.beans.BeanUtils.copyProperties;
 
@@ -29,18 +32,22 @@ public class UserController {
     @Autowired
     private UserService userService;
 
+    @Autowired
+    private PetService petService;
+
     @PostMapping("/customer")
     public CustomerDTO saveCustomer(@RequestBody CustomerDTO customerDTO){
-        long id = userService.saveCustomer(customerDTO);
-         customerDTO.setId(id);
-         return customerDTO;
+        Customer customer = convertToCustomer(customerDTO);
+        if (customerDTO.getPetIds() != null)
+            customer.setPets(customerDTO.getPetIds().stream().map(petService::getPetById).collect(Collectors.toList()));
+        return convertToCustomerDTO(userService.saveCustomer(customer));
     }
 
     @GetMapping("/customer")
     public List<CustomerDTO> getAllCustomers(){
-        List<CustomerDTO> output = new ArrayList<>();
-        userService.getAllCustomers().forEach( c -> output.add(convertToCustomerDTO(c)));
-        return output;
+        return userService.getAllCustomers().stream()
+                .map(this::convertToCustomerDTO)
+                .collect(Collectors.toList());
     }
 
     @GetMapping("/customer/pet/{petId}")
@@ -66,23 +73,39 @@ public class UserController {
     }
 
     @GetMapping("/employee/availability")
-    public List<EmployeeDTO> findEmployeesForService(@RequestBody EmployeeRequestDTO employeeRequestDTO) {
-        List<EmployeeDTO> output = new ArrayList<>();
-        userService.getAllEmployeesForService(employeeRequestDTO)
-                .forEach(e -> output.add(convertToEmployeeDTO(e)));
-        return output;
+    public List<EmployeeDTO> findEmployeesForService(@RequestBody EmployeeRequestDTO request) {
+        return userService.getAllEmployeesForService(request.getSkills(), request.getDate())
+                .stream()
+                .map(this::convertToEmployeeDTO)
+                .collect(Collectors.toList());
     }
 
-    private CustomerDTO convertToCustomerDTO(Customer pet) {
+    private CustomerDTO convertToCustomerDTO(Customer customer) {
         CustomerDTO customerDTO = new CustomerDTO();
-        copyProperties(pet, customerDTO);
+        copyProperties(customer, customerDTO);
+        if (customer.getPets() != null && customer.getPets().size() > 0) {
+            customerDTO.setPetIds(customer.getPets().stream()
+                    .map(Pet::getId).collect(Collectors.toList()));
+        }
         return customerDTO;
     }
 
-    private EmployeeDTO convertToEmployeeDTO(Employee pet) {
+    private Customer convertToCustomer(CustomerDTO customerDTO) {
+        Customer customer = new Customer();
+        copyProperties(customerDTO, customer);
+        return customer; //maybe i also need to convert pets into petsId
+    }
+
+    private EmployeeDTO convertToEmployeeDTO(Employee employee) {
         EmployeeDTO employeeDTO = new EmployeeDTO();
-        copyProperties(pet, employeeDTO);
+        copyProperties(employee, employeeDTO);
         return employeeDTO;
+    }
+
+    private Employee convertToEmployee(EmployeeDTO employeeDTO) {
+        Employee employee = new Employee();
+        copyProperties(employeeDTO, employee);
+        return employee;
     }
 
 }

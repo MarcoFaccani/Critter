@@ -1,7 +1,9 @@
 package com.udacity.jdnd.course3.critter.user.service;
 
+import com.udacity.jdnd.course3.critter.pet.repository.PetRepository;
 import com.udacity.jdnd.course3.critter.user.EmployeeDTO;
 import com.udacity.jdnd.course3.critter.user.EmployeeRequestDTO;
+import com.udacity.jdnd.course3.critter.user.EmployeeSkill;
 import com.udacity.jdnd.course3.critter.user.exception.CustomerNotFoundException;
 import com.udacity.jdnd.course3.critter.user.exception.EmployeeNotFoundException;
 import com.udacity.jdnd.course3.critter.user.model.Customer;
@@ -13,6 +15,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.DayOfWeek;
+import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
@@ -28,18 +32,19 @@ public class UserService {
     @Autowired
     private EmployeeRepository employeeRepository;
 
-    public long saveCustomer(CustomerDTO customerDTO) {
-        Customer customer = new Customer();
-        copyProperties(customerDTO, customer);
-        return customerRepository.save(customer).getId();
+    @Autowired
+    private PetRepository petRepository;
+
+    public Customer saveCustomer(Customer customer) {
+        return customerRepository.save(customer);
     }
 
-    public Iterable<Customer> getAllCustomers() {
+    public List<Customer> getAllCustomers() {
         return customerRepository.findAll();
     }
 
     public Customer getOwnerByPetId(long petId) {
-        return customerRepository.findCustomerByPetIds(petId).orElseThrow(CustomerNotFoundException::new);
+        return petRepository.getOne(petId).getOwner();
     }
 
     public long saveEmployee(EmployeeDTO employeeDTO) {
@@ -58,7 +63,15 @@ public class UserService {
         employeeRepository.save(employee);
     }
 
-    public List<Employee> getAllEmployeesForService(EmployeeRequestDTO employeeRequestDTO) {
-        throw new UnsupportedOperationException();
+    public List<Employee> getAllEmployeesForService(Set<EmployeeSkill> employeeSkills, LocalDate date) {
+        List<Employee> employees = new ArrayList<>();
+        employeeRepository.findDistinctAllBySkillsInAndDaysAvailable(employeeSkills, date.getDayOfWeek())
+                .forEach(e -> { if (e.getSkills().containsAll(employeeSkills)) employees.add(e); });
+
+        return  employees;
+    }
+
+    public Customer getCustomerById(long id) {
+        return customerRepository.findById(id).orElseThrow(CustomerNotFoundException::new);
     }
 }

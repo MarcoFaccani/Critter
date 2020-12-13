@@ -3,6 +3,8 @@ package com.udacity.jdnd.course3.critter.pet.controller;
 import com.udacity.jdnd.course3.critter.pet.model.Pet;
 import com.udacity.jdnd.course3.critter.pet.model.PetDTO;
 import com.udacity.jdnd.course3.critter.pet.service.PetService;
+import com.udacity.jdnd.course3.critter.user.model.Customer;
+import com.udacity.jdnd.course3.critter.user.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -11,6 +13,7 @@ import static org.springframework.beans.BeanUtils.copyProperties;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Handles web requests related to Pets.
@@ -23,10 +26,15 @@ public class PetController {
     @Autowired
     private PetService petService;
 
+    @Autowired
+    private UserService userService;
+
     @PostMapping
     public PetDTO savePet(@RequestBody PetDTO petDTO) {
-        petDTO.setId(petService.savePet(petDTO).getId());
-        return petDTO;
+        Pet pet = convertToPet(petDTO);
+        if (petDTO.getOwnerId() != null) pet.setOwner(userService.getCustomerById(petDTO.getOwnerId()));
+        pet = petService.savePet(pet);
+        return convertToPetDTO(pet);
     }
 
     @GetMapping("/{petId}")
@@ -36,21 +44,32 @@ public class PetController {
 
     @GetMapping
     public List<PetDTO> getPets(){
-        List<PetDTO> output = new ArrayList<>();
-        petService.getAllPets().forEach(pet -> output.add(convertToPetDTO(pet)));
-        return output;
+        return petService.getAllPets().stream()
+                .map(this::convertToPetDTO)
+                .collect(Collectors.toList());
     }
 
     @GetMapping("/owner/{ownerId}")
     public List<PetDTO> getPetsByOwner(@PathVariable long ownerId) {
-        List<PetDTO> output = new ArrayList<>();
-        petService.getPetsByOwnerId(ownerId).forEach(pet -> output.add(convertToPetDTO(pet)));
-        return output;
+        return petService.getPetsByOwnerId(ownerId).stream()
+                .map(this::convertToPetDTO)
+                .collect(Collectors.toList());
+    }
+
+    private Pet convertToPet(PetDTO petDTO) {
+        Pet pet = new Pet();
+        copyProperties(petDTO, pet);
+        return pet;
     }
 
     private PetDTO convertToPetDTO(Pet pet) {
-        PetDTO petDTO = new PetDTO();
-        copyProperties(pet, petDTO);
-        return petDTO;
+        if (pet == null) return null;
+        else {
+            PetDTO petDTO = new PetDTO();
+            copyProperties(pet, petDTO);
+            petDTO.setOwnerId(pet.getOwner().getId()); //to verify
+            return petDTO;
+        }
     }
+
 }

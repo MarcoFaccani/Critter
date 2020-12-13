@@ -1,6 +1,7 @@
 package com.udacity.jdnd.course3.critter.schedule;
 
-import com.udacity.jdnd.course3.critter.pet.repository.PetRepistory;
+import com.udacity.jdnd.course3.critter.pet.model.Pet;
+import com.udacity.jdnd.course3.critter.pet.repository.PetRepository;
 import com.udacity.jdnd.course3.critter.user.exception.CustomerNotFoundException;
 import com.udacity.jdnd.course3.critter.user.model.Customer;
 import com.udacity.jdnd.course3.critter.user.repository.CustomerRepository;
@@ -10,6 +11,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static org.springframework.beans.BeanUtils.copyProperties;
 
@@ -23,7 +25,7 @@ public class ScheduleService {
     private EmployeeRepository employeeRepository;
 
     @Autowired
-    private PetRepistory petRepistory;
+    private PetRepository petRepository;
 
     @Autowired
     private CustomerRepository customerRepository;
@@ -53,7 +55,9 @@ public class ScheduleService {
     public List<ScheduleDTO> getScheduleForCustomer(long customerId) {
         List<ScheduleDTO> schedules = new ArrayList<>();
         Customer customer = customerRepository.findById(customerId).orElseThrow(CustomerNotFoundException::new);
-        customer.getPetIds().forEach(petId -> schedules.addAll(this.getScheduleForPetById(petId)));
+        customer.getPets().stream().map(Pet::getId).map(this::getScheduleForPetById).collect(Collectors.toList()).forEach(schedules::addAll);
+        //schedules.addAll(customer.getPets().stream().map(Pet::getId).map(this::getScheduleForPetById).collect(Collectors.toList()));
+        //customer.getPets().forEach(petId -> schedules.addAll(this.getScheduleForPetById(petId)));
         return schedules;
     }
 
