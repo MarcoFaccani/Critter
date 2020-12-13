@@ -57,7 +57,7 @@ public class UserController {
 
     @PostMapping("/employee")
     public EmployeeDTO saveEmployee(@RequestBody EmployeeDTO employeeDTO) {
-        long id = userService.saveEmployee(employeeDTO);
+        long id = userService.saveEmployee(convertToEmployee(employeeDTO));
         employeeDTO.setId(id);
         return employeeDTO;
     }

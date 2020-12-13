@@ -3,18 +3,21 @@ package com.udacity.jdnd.course3.critter.schedule;
 import com.udacity.jdnd.course3.critter.pet.model.Pet;
 import com.udacity.jdnd.course3.critter.user.EmployeeSkill;
 import com.udacity.jdnd.course3.critter.user.model.Employee;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
+import lombok.*;
 
 import javax.persistence.*;
+import java.io.Serializable;
+import java.lang.reflect.Array;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-@Data
-@Entity
+@Setter
+@Getter
 @EqualsAndHashCode
-public class Schedule {
+@Entity
+public class Schedule implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -23,17 +26,11 @@ public class Schedule {
     private LocalDate date;
 
     @ManyToMany(cascade = CascadeType.ALL)
-    private List<Employee> employees;
+    private List<Employee> employees = new ArrayList<>();
 
     @ManyToMany(cascade = CascadeType.ALL)
-    private List<Pet> pets;
+    private List<Pet> pets = new ArrayList<>();
 
     @ElementCollection
     private Set<EmployeeSkill> activities;
-
-    @ElementCollection
-    private List<Long> employeeIds;
-
-    @ElementCollection
-    private List<Long> petIds;
 }

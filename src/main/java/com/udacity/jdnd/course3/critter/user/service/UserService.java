@@ -47,9 +47,7 @@ public class UserService {
         return petRepository.getOne(petId).getOwner();
     }
 
-    public long saveEmployee(EmployeeDTO employeeDTO) {
-        Employee employee = new Employee();
-        copyProperties(employeeDTO, employee);
+    public long saveEmployee(Employee employee) {
         return employeeRepository.save(employee).getId();
     }
 

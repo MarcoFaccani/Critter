@@ -43,11 +43,4 @@ public class PetService {
         return petRepository.findAllByOwnerId(ownerId);
     }
 
-    private PetDTO convertToPetDTO(Pet pet) {
-        PetDTO petDTO = new PetDTO();
-        copyProperties(pet, petDTO);
-        petDTO.setOwnerId(pet.getOwner().getId()); //to verify
-        return petDTO;
-    }
-
 }

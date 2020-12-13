@@ -3,15 +3,16 @@ package com.udacity.jdnd.course3.critter.pet.model;
 import com.udacity.jdnd.course3.critter.user.model.Customer;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.ToString;
 
 import javax.persistence.*;
+import java.io.Serializable;
 import java.time.LocalDate;
 import java.util.List;
 
 @Entity
 @Data
-@EqualsAndHashCode
-public class Pet {
+public class Pet implements Serializable  {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)

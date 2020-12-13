@@ -4,6 +4,7 @@ import com.udacity.jdnd.course3.critter.user.EmployeeSkill;
 import lombok.EqualsAndHashCode;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
@@ -13,6 +14,12 @@ import java.util.Set;
  */
 @EqualsAndHashCode
 public class ScheduleDTO {
+
+    public ScheduleDTO() {
+        this.petIds = new ArrayList<>();
+        this.employeeIds = new ArrayList<>();
+    }
+
     private long id;
     private List<Long> employeeIds;
     private List<Long> petIds;

@@ -1,14 +1,18 @@
 package com.udacity.jdnd.course3.critter.schedule;
 
+import com.udacity.jdnd.course3.critter.pet.exception.PetNotFoundException;
 import com.udacity.jdnd.course3.critter.pet.model.Pet;
 import com.udacity.jdnd.course3.critter.pet.repository.PetRepository;
 import com.udacity.jdnd.course3.critter.user.exception.CustomerNotFoundException;
+import com.udacity.jdnd.course3.critter.user.exception.EmployeeNotFoundException;
 import com.udacity.jdnd.course3.critter.user.model.Customer;
 import com.udacity.jdnd.course3.critter.user.repository.CustomerRepository;
 import com.udacity.jdnd.course3.critter.user.repository.EmployeeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.SerializationUtils;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -30,42 +34,26 @@ public class ScheduleService {
     @Autowired
     private CustomerRepository customerRepository;
 
-    public ScheduleDTO createSchedule(Schedule schedule) {
-        return convertToScheduleDTO(scheduleRepository.save(schedule));
+    public Schedule createSchedule(Schedule schedule) {
+        return scheduleRepository.save(schedule);
     }
 
-    public List<ScheduleDTO> getAllSChedules() {
-        List<ScheduleDTO> schedules = new ArrayList<>();
-        scheduleRepository.findAll().forEach(s -> schedules.add(convertToScheduleDTO(s)));
-        return schedules;
+    public List<Schedule> getAllSChedules() {
+        return scheduleRepository.findAll();
     }
 
-    public List<ScheduleDTO> getScheduleForPetById(long petId) {
-        List<ScheduleDTO> schedules = new ArrayList<>();
-        scheduleRepository.findAllByPetIds(petId).forEach(s -> schedules.add(convertToScheduleDTO(s)));
-        return schedules;
+    public List<Schedule> getScheduleForPetById(long petId) {
+        return scheduleRepository.findAllByPetsContaining(petRepository.findById(petId).orElseThrow(PetNotFoundException::new));
     }
 
-    public List<ScheduleDTO> getScheduleForEmployee(long employeeId) {
-        List<ScheduleDTO> schedules = new ArrayList<>();
-        scheduleRepository.findAllByEmployeeIds(employeeId).forEach(s -> schedules.add(convertToScheduleDTO(s)));
-        return schedules;
+    public List<Schedule> getScheduleForEmployee(long employeeId) {
+        return scheduleRepository.findAllByEmployeesContaining(employeeRepository.findById(employeeId).orElseThrow(EmployeeNotFoundException::new));
     }
 
-    public List<ScheduleDTO> getScheduleForCustomer(long customerId) {
-        List<ScheduleDTO> schedules = new ArrayList<>();
+    public List<List<Schedule>> getScheduleForCustomer(long customerId) {
         Customer customer = customerRepository.findById(customerId).orElseThrow(CustomerNotFoundException::new);
-        customer.getPets().stream().map(Pet::getId).map(this::getScheduleForPetById).collect(Collectors.toList()).forEach(schedules::addAll);
-        //schedules.addAll(customer.getPets().stream().map(Pet::getId).map(this::getScheduleForPetById).collect(Collectors.toList()));
-        //customer.getPets().forEach(petId -> schedules.addAll(this.getScheduleForPetById(petId)));
-        return schedules;
+        return customer.getPets().stream().map(Pet::getId).map(this::getScheduleForPetById).collect(Collectors.toList());
     }
 
-    private ScheduleDTO convertToScheduleDTO(Schedule schedule) {
-        ScheduleDTO scheduleDTO = new ScheduleDTO();
-        copyProperties(schedule, scheduleDTO);
-        //schedule.getPets().forEach(c -> scheduleDTO.getPetIds().add(c.getId()) );
-        //schedule.getEmployees().forEach(c -> scheduleDTO.getEmployeeIds().add(c.getId()));
-        return scheduleDTO;
-    }
+
 }
