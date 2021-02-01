@@ -23,14 +23,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-/**
- * This is a set of functional tests to validate the basic capabilities desired for this application.
- * Students will need to configure the application to run these tests by adding application.properties file
- * to the test/resources directory that specifies the datasource. It can run using an in-memory H2 instance
- * and should not try to re-use the same datasource used by the rest of the app.
- *
- * These tests should all pass once the project is complete.
- */
+
 @Transactional
 @SpringBootTest(classes = CritterApplication.class)
 public class CritterFunctionalTest {
